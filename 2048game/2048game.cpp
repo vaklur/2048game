@@ -21,7 +21,8 @@ int getNickName();
 int drawGameField();
 int generateRandomTwoOrFour();
 int getRandomZeroPosition();
-int playerMove(int move);
+int playerMove(int);
+void statistics();
 
 // Global variables
 int gameField[4][4];
@@ -383,4 +384,8 @@ void delay(int milliseconds)
 	now = then = clock();
 	while ((now - then) < pause)
 		now = clock();
+}
+
+void statistics() {
+
 }
