@@ -1,18 +1,37 @@
 ﻿// 2048game.cpp: Definuje vstupní bod pro aplikaci.
 //
 
+
+
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+
 #include "2048game.h"
 
+
+//#define _CRT_SECURE_NO_DEPRECATE 
+
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <conio.h>
+#include <string.h>
+
 
 // Colors
 #define BLUE(string) "\x1b[34m" string "\x1b[0m"
 #define RED(string) "\x1b[31m" string "\x1b[0m"
 #define YELLOW(string) "\x1b[33m" string "\x1b[0m"
 #define GREEN(string) "\x1b[32m" string "\x1b[0m"
+
+// Structure
+struct statisticsRecord {
+	char nickname[10];
+	int score;
+};
 
 // Functions
 int menu();
@@ -22,7 +41,12 @@ int drawGameField();
 int generateRandomTwoOrFour();
 int getRandomZeroPosition();
 int playerMove(int);
-void statistics();
+
+void readStatistics();
+void readStatisticsFile();
+void writeFileStatistics();
+void writeToStatistics(statisticsRecord);
+
 
 // Global variables
 int gameField[4][4];
@@ -30,16 +54,21 @@ int score;
 char nickname[10];
 
 
+statisticsRecord statistics[10];
+
+
+
 void delay(int milliseconds);
 
 int main()
 {
+	readStatisticsFile();
 	menu();
 	return 0;
 }
 
 int menu() {
-	char menu_option;
+
 	do{
 		system("cls");
 		printf("Game 2048");
@@ -48,31 +77,21 @@ int menu() {
 		printf("2. -> Continue in actual game\n");
 		printf("3. -> Statistics\n");
 		printf("4. -> End game\n");
-
-		scanf_s("%c", &menu_option);
-
-		switch (menu_option) {
-			// Start game
-			case '1':
-				getNickName();
-				break;
-			// Continue in actual game
-			case '2':
-				break;
-			// Statistics
-			case '3':
-				break;
-			// Quit application
-			case '4':
-				break;
-			default:
-				printf("Invalid output");
-				break;
-		}
+		
+		char key = getch();
+		// Start new game
+		if (key == '1') getNickName();
+		// Continue in actual game
+		if (key == '2');
+		// Statistics
+		if (key == '3') readStatistics();
+		// Quit game
+		if (key == '4')	break;
+		
 	} 
-	while (menu_option != '4');
+	while (1);
 
-
+	
 	return 0;
 }
 
@@ -119,6 +138,11 @@ int game() {
 				printf("\n\n\n !!! GAME OVER !!! \n\n\n");
 				printf("PLAYER: %s\n",nickname);
 				printf(" SCORE: %i \n\n\n", score);
+				statisticsRecord record;
+				record.score = score;
+				strcpy(record.nickname, nickname);
+				writeToStatistics(record);
+				writeFileStatistics();
 				delay(5000);
 				break;
 			}
@@ -386,6 +410,89 @@ void delay(int milliseconds)
 		now = clock();
 }
 
-void statistics() {
-
+void readStatisticsFile() {
+	FILE* fp;
+	fp = fopen("statistics.txt", "r");
+	if (fp)
+	{
+		char str[60];
+		int line = 0;
+		while (fgets(str, 60, fp) != NULL) {
+			char* ptr = strtok(str,";");
+			int position = 0;
+			while (ptr != NULL) {
+				if (position == 0) {
+					strcpy(statistics[line].nickname, ptr);
+				}
+				if (position == 1) {
+					int score = atoi(ptr);
+					statistics[line].score =score;
+				}
+				//printf("%s,", ptr);
+				ptr = strtok(NULL, ";");
+				position++;
+			}
+			line++;
+		}
+		fclose(fp);
+	}
 }
+
+void readStatistics() {
+	do {
+		char key = 'm';
+		system("cls");
+		printf("*** Game 2048 ***");
+		printf("\n\n\n");
+		printf("Position\tNickname\tScore\n");
+		for (int i = 0; i < 10; i++) {	
+				printf("%i\t\t%s\t\t%i\n", i+1, statistics[i].nickname, statistics[i].score);	
+		}
+		printf("\n\n");
+		printf("(Q)Exit");
+		
+		key = getch();
+		if (key == 'q') break;
+	} while (1);	
+}
+
+void writeFileStatistics() {
+	FILE* fp;
+	fp = fopen("statistics.txt", "w");
+	if (fp)
+	{
+		for (int i = 0; i < 10; i++) {
+			fprintf(fp, "%s;%i\n",statistics[i].nickname,statistics[i].score);
+		}
+		
+	}
+	fclose(fp);
+	
+}
+
+void writeToStatistics(statisticsRecord record) {
+	for (int i = 0; i < 10;i++ ) {
+		if (statistics[i].score < record.score) {
+			statisticsRecord help1{ "",statistics[i].score };
+			strcpy(help1.nickname, statistics[i].nickname);
+
+			statistics[i].score = record.score;
+			strcpy(statistics[i].nickname, record.nickname);
+			
+			for (int j = (i+1); j < 10; j++) {
+				statisticsRecord help2{ "",statistics[j].score};
+				strcpy(help2.nickname, statistics[j].nickname);
+
+				statistics[j].score = help1.score;
+				strcpy(statistics[j].nickname, help1.nickname);
+
+				help1.score = help2.score;
+				strcpy(help1.nickname, help2.nickname);
+			}
+			break;	
+		}
+		
+	}
+}
+
+
