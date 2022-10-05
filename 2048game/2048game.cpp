@@ -1,17 +1,11 @@
 ﻿// 2048game.cpp: Definuje vstupní bod pro aplikaci.
 //
-
-
-
-#ifdef _MSC_VER
+#define _CRT_SECURE_NO_DEPRECATE 
 #define _CRT_SECURE_NO_WARNINGS
-#endif
-
 
 #include "2048game.h"
 
 
-//#define _CRT_SECURE_NO_DEPRECATE 
 
 #include <errno.h>
 #include <stdio.h>
@@ -26,6 +20,13 @@
 #define RED(string) "\x1b[31m" string "\x1b[0m"
 #define YELLOW(string) "\x1b[33m" string "\x1b[0m"
 #define GREEN(string) "\x1b[32m" string "\x1b[0m"
+#define PURPLE(string) "\x1b[35m" string "\x1b[0m"
+#define CYAN(string) "\x1b[36m" string "\x1b[0m"
+#define LIGHT_GRAY(string) "\x1b[37m" string "\x1b[0m"
+#define LIGHT_GREEN(string) "\x1b[92m" string "\x1b[0m"
+#define LIGHT_CYAN(string) "\x1b[96m" string "\x1b[0m"
+#define LIGHT_BLUE(string) "\x1b[94m" string "\x1b[0m"
+#define LIGHT_YELLOW(string) "\x1b[93m" string "\x1b[0m"
 
 // Structure
 struct statisticsRecord {
@@ -37,7 +38,9 @@ struct statisticsRecord {
 int menu();
 int game();
 int getNickName();
-int drawGameField();
+void drawGameField();
+void drawGameField2();
+void numberColour(int number);
 int generateRandomTwoOrFour();
 int getRandomZeroPosition();
 int playerMove(int);
@@ -52,6 +55,7 @@ void writeToStatistics(statisticsRecord);
 int gameField[4][4];
 int score;
 char nickname[10];
+bool gameEnd= true;
 
 
 statisticsRecord statistics[10];
@@ -71,8 +75,8 @@ int menu() {
 
 	do{
 		system("cls");
-		printf("Game 2048");
-		printf("\n\n\n");
+		printf("**** Game 2048 ****\n\n");
+		printf("\n");
 		printf("1. -> Start new game\n");
 		printf("2. -> Continue in actual game\n");
 		printf("3. -> Statistics\n");
@@ -82,7 +86,9 @@ int menu() {
 		// Start new game
 		if (key == '1') getNickName();
 		// Continue in actual game
-		if (key == '2');
+		if (key == '2') {
+			if(gameEnd==false) game();
+		}
 		// Statistics
 		if (key == '3') readStatistics();
 		// Quit game
@@ -97,7 +103,7 @@ int menu() {
 
 int getNickName() {
 	system("cls");
-	printf("Game 2048");
+	printf("**** Game 2048 ****\n\n");
 	printf("\n\n\n");
 	printf("Enter you nickname (max 10 characters):");
 	scanf("%9s", nickname);
@@ -106,16 +112,19 @@ int getNickName() {
 }
 
 int game() {
-	// Initialize game field with zeros
-	score = 0;
 	int gameOver = 0;
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			gameField[i][j] = 0;
+	// Initialize game field with zeros
+	if (gameEnd == true) {
+		score = 0;
+		
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				gameField[i][j] = 0;
+			}
 		}
+		gameField[0][0] = 2;
 	}
-	gameField[0][0] = 2;
-	drawGameField();
+	drawGameField2();
 	do {
 		char key = 'm';
 		
@@ -131,7 +140,10 @@ int game() {
 		// RESTART
 		if (key == 'r') game();
 		// EXIT
-		if (key == 'q') break;
+		if (key == 'q') {
+			gameEnd = false;
+			break;
+		}
 		// GAME OVER
 		if (gameOver == 1) {
 				system("cls");
@@ -332,27 +344,39 @@ int playerMove(int move) {
 		int row = zeroPosition / 4;
 		int collum = zeroPosition % 4;
 		gameField[row][collum] = generateRandomTwoOrFour();
-		drawGameField();
+		drawGameField2();
 	}
 	return 0;
 }
 
-int drawGameField() {
+void drawGameField2() {
 	system("cls");
 	printf("**** Game 2048 ****\n\n");
-	printf("SCORE: %i\n",score);
+	printf("SCORE: %i\n", score);
 	printf("|-------|-------|-------|-------|\n");
-	printf("|" YELLOW("%i") "\t|" YELLOW("%i") "\t|" YELLOW("%i") "\t|" YELLOW("%i") "\t|\n", gameField[0][0], gameField[0][1], gameField[0][2], gameField[0][3]);
-	printf("|-------|-------|-------|-------|\n");
-	printf("|" YELLOW("%i") "\t|" YELLOW("%i") "\t|" YELLOW("%i") "\t|" YELLOW("%i") "\t|\n", gameField[1][0], gameField[1][1], gameField[1][2], gameField[1][3]);
-	printf("|-------|-------|-------|-------|\n");
-	printf("|" YELLOW("%i") "\t|" YELLOW("%i") "\t|" YELLOW("%i") "\t|" YELLOW("%i") "\t|\n", gameField[2][0], gameField[2][1], gameField[2][2], gameField[2][3]);
-	printf("|-------|-------|-------|-------|\n");
-	printf("|" YELLOW("%i") "\t|" YELLOW("%i") "\t|" YELLOW("%i") "\t|" YELLOW("%i") "\t|\n", gameField[3][0], gameField[3][1], gameField[3][2], gameField[3][3]);
-	printf("|-------|-------|-------|-------|\n");
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			numberColour(gameField[i][j]);
+		}
+		printf("\n|-------|-------|-------|-------|\n");
+	}
 	printf("\n\n");
 	printf("(W)Up (S)Down (A)Left (D)Right\n (R) Restart (Q)Exit");
-	return 0;
+}
+
+void numberColour(int number) {
+	if (number == 2) printf("|" YELLOW("%i") "\t", number);
+	else if (number == 4) printf("|" RED("%i") "\t", number);
+	else if (number == 8) printf("|" BLUE("%i") "\t", number);
+	else if (number == 16) printf("|" GREEN("%i") "\t", number);
+	else if (number == 32) printf("|" PURPLE("%i") "\t", number);
+	else if (number == 64) printf("|" CYAN("%i") "\t", number);
+	else if (number == 128) printf("|" LIGHT_GRAY("%i") "\t", number);
+	else if (number == 256) printf("|" LIGHT_CYAN("%i") "\t", number);
+	else if (number == 512) printf("|" LIGHT_GREEN("%i") "\t", number);
+	else if (number == 1024) printf("|" LIGHT_YELLOW("%i") "\t", number);
+	else if (number == 2048) printf("|" LIGHT_BLUE("%i") "\t", number);
+	else printf("|%i\t", number);
 }
 
 int getRandomZeroPosition() {
