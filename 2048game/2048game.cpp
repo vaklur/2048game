@@ -1,4 +1,4 @@
-﻿// 2048game.cpp: Definuje vstupní bod pro aplikaci.
+﻿// 2048game.cpp
 //
 #define _CRT_SECURE_NO_DEPRECATE 
 #define _CRT_SECURE_NO_WARNINGS
@@ -14,33 +14,16 @@
 #include <conio.h>
 #include <string.h>
 
+#include "2048draw.h"
+#include "structures.h"
 
-// Colors
-#define BLUE(string) "\x1b[34m" string "\x1b[0m"
-#define RED(string) "\x1b[31m" string "\x1b[0m"
-#define YELLOW(string) "\x1b[33m" string "\x1b[0m"
-#define GREEN(string) "\x1b[32m" string "\x1b[0m"
-#define PURPLE(string) "\x1b[35m" string "\x1b[0m"
-#define CYAN(string) "\x1b[36m" string "\x1b[0m"
-#define LIGHT_GRAY(string) "\x1b[37m" string "\x1b[0m"
-#define LIGHT_GREEN(string) "\x1b[92m" string "\x1b[0m"
-#define LIGHT_CYAN(string) "\x1b[96m" string "\x1b[0m"
-#define LIGHT_BLUE(string) "\x1b[94m" string "\x1b[0m"
-#define LIGHT_YELLOW(string) "\x1b[93m" string "\x1b[0m"
 
-// Structure
-struct statisticsRecord {
-	char nickname[10];
-	int score;
-};
 
 // Functions
 int menu();
 int game();
 int getNickName();
-void drawGameField();
-void drawGameField2();
-void numberColour(int number);
+
 int generateRandomTwoOrFour();
 int getRandomZeroPosition();
 int playerMove(int);
@@ -74,13 +57,7 @@ int main()
 int menu() {
 
 	do{
-		system("cls");
-		printf("**** Game 2048 ****\n\n");
-		printf("\n");
-		printf("1. -> Start new game\n");
-		printf("2. -> Continue in actual game\n");
-		printf("3. -> Statistics\n");
-		printf("4. -> End game\n");
+		drawMenu();
 		
 		char key = getch();
 		// Start new game
@@ -124,7 +101,7 @@ int game() {
 		}
 		gameField[0][0] = 2;
 	}
-	drawGameField2();
+	drawGameField(gameField,score);
 	do {
 		char key = 'm';
 		
@@ -146,17 +123,14 @@ int game() {
 		}
 		// GAME OVER
 		if (gameOver == 1) {
-				system("cls");
-				printf("\n\n\n !!! GAME OVER !!! \n\n\n");
-				printf("PLAYER: %s\n",nickname);
-				printf(" SCORE: %i \n\n\n", score);
-				statisticsRecord record;
-				record.score = score;
-				strcpy(record.nickname, nickname);
-				writeToStatistics(record);
-				writeFileStatistics();
-				delay(5000);
-				break;
+			drawEndScore(nickname,score);
+			statisticsRecord record;
+			record.score = score;
+			strcpy(record.nickname, nickname);
+			writeToStatistics(record);
+			writeFileStatistics();
+			delay(5000);
+			break;
 			}
 	}
 	while (gameOver!=1);
@@ -344,40 +318,12 @@ int playerMove(int move) {
 		int row = zeroPosition / 4;
 		int collum = zeroPosition % 4;
 		gameField[row][collum] = generateRandomTwoOrFour();
-		drawGameField2();
+		drawGameField(gameField,score);
 	}
 	return 0;
 }
 
-void drawGameField2() {
-	system("cls");
-	printf("**** Game 2048 ****\n\n");
-	printf("SCORE: %i\n", score);
-	printf("|-------|-------|-------|-------|\n");
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			numberColour(gameField[i][j]);
-		}
-		printf("\n|-------|-------|-------|-------|\n");
-	}
-	printf("\n\n");
-	printf("(W)Up (S)Down (A)Left (D)Right\n (R) Restart (Q)Exit");
-}
 
-void numberColour(int number) {
-	if (number == 2) printf("|" YELLOW("%i") "\t", number);
-	else if (number == 4) printf("|" RED("%i") "\t", number);
-	else if (number == 8) printf("|" BLUE("%i") "\t", number);
-	else if (number == 16) printf("|" GREEN("%i") "\t", number);
-	else if (number == 32) printf("|" PURPLE("%i") "\t", number);
-	else if (number == 64) printf("|" CYAN("%i") "\t", number);
-	else if (number == 128) printf("|" LIGHT_GRAY("%i") "\t", number);
-	else if (number == 256) printf("|" LIGHT_CYAN("%i") "\t", number);
-	else if (number == 512) printf("|" LIGHT_GREEN("%i") "\t", number);
-	else if (number == 1024) printf("|" LIGHT_YELLOW("%i") "\t", number);
-	else if (number == 2048) printf("|" LIGHT_BLUE("%i") "\t", number);
-	else printf("|%i\t", number);
-}
 
 int getRandomZeroPosition() {
 	int zeroPosition = 0;
@@ -465,15 +411,7 @@ void readStatisticsFile() {
 void readStatistics() {
 	do {
 		char key = 'm';
-		system("cls");
-		printf("*** Game 2048 ***");
-		printf("\n\n\n");
-		printf("Position\tNickname\tScore\n");
-		for (int i = 0; i < 10; i++) {	
-				printf("%i\t\t%s\t\t%i\n", i+1, statistics[i].nickname, statistics[i].score);	
-		}
-		printf("\n\n");
-		printf("(Q)Exit");
+		drawStatistics(statistics);
 		
 		key = getch();
 		if (key == 'q') break;
