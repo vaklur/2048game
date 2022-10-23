@@ -3,8 +3,9 @@
 #define _CRT_SECURE_NO_DEPRECATE 
 #define _CRT_SECURE_NO_WARNINGS
 
+#include "structures.h"
 #include "2048game.h"
-
+#include "2048draw.h"
 
 
 #include <errno.h>
@@ -14,8 +15,7 @@
 #include <conio.h>
 #include <string.h>
 
-#include "2048draw.h"
-#include "structures.h"
+statisticsRecord statistics[10];
 
 
 
@@ -24,14 +24,14 @@ int menu();
 int game();
 int getNickName();
 
-int generateRandomTwoOrFour();
-int getRandomZeroPosition();
-int playerMove(int);
-
 void readStatistics();
 void readStatisticsFile();
 void writeFileStatistics();
 void writeToStatistics(statisticsRecord);
+
+int generateRandomTwoOrFour();
+int getRandomZeroPosition();
+int playerMove(int);
 
 
 // Global variables
@@ -41,14 +41,11 @@ char nickname[10];
 bool gameEnd= true;
 
 
-statisticsRecord statistics[10];
-
-
-
 void delay(int milliseconds);
 
 int main()
 {
+	
 	readStatisticsFile();
 	menu();
 	return 0;
@@ -101,19 +98,20 @@ int game() {
 		}
 		gameField[0][0] = 2;
 	}
-	drawGameField(gameField,score);
+	drawGameField(gameField,score,nickname);
 	do {
-		char key = 'm';
+		unsigned char key = 'm';
 		
 		key = getch();
+		if (key == 0xE0) key = getch();
 		// UP
-		if (key == 'w')	gameOver = playerMove(1);	
+		if (key == 'w' || key == 72)	gameOver = playerMove(1);
 		// DOWN
-		if (key == 's')	gameOver = playerMove(2);
+		if (key == 's' || key == 80)	gameOver = playerMove(2);
 		// LEFT
-		if (key == 'a')	gameOver = playerMove(3);
+		if (key == 'a' || key == 75)	gameOver = playerMove(3);
 		// RIGHT
-		if (key == 'd') gameOver = playerMove(4);
+		if (key == 'd' || key == 77) gameOver = playerMove(4);
 		// RESTART
 		if (key == 'r') game();
 		// EXIT
@@ -318,7 +316,7 @@ int playerMove(int move) {
 		int row = zeroPosition / 4;
 		int collum = zeroPosition % 4;
 		gameField[row][collum] = generateRandomTwoOrFour();
-		drawGameField(gameField,score);
+		drawGameField(gameField,score,nickname);
 	}
 	return 0;
 }
@@ -380,6 +378,55 @@ void delay(int milliseconds)
 		now = clock();
 }
 
+void readStatistics() {
+	do {
+		char key = 'm';
+		drawStatistics(statistics);
+
+		key = getch();
+		if (key == 'q') break;
+	} while (1);
+}
+
+void writeFileStatistics() {
+	FILE* fp;
+	fp = fopen("statistics.txt", "w");
+	if (fp)
+	{
+		for (int i = 0; i < 10; i++) {
+			fprintf(fp, "%s;%i\n", statistics[i].nickname, statistics[i].score);
+		}
+
+	}
+	fclose(fp);
+
+}
+
+void writeToStatistics(statisticsRecord record) {
+	for (int i = 0; i < 10; i++) {
+		if (statistics[i].score < record.score) {
+			statisticsRecord help1{ "",statistics[i].score };
+			strcpy(help1.nickname, statistics[i].nickname);
+
+			statistics[i].score = record.score;
+			strcpy(statistics[i].nickname, record.nickname);
+
+			for (int j = (i + 1); j < 10; j++) {
+				statisticsRecord help2{ "",statistics[j].score };
+				strcpy(help2.nickname, statistics[j].nickname);
+
+				statistics[j].score = help1.score;
+				strcpy(statistics[j].nickname, help1.nickname);
+
+				help1.score = help2.score;
+				strcpy(help1.nickname, help2.nickname);
+			}
+			break;
+		}
+
+	}
+}
+
 void readStatisticsFile() {
 	FILE* fp;
 	fp = fopen("statistics.txt", "r");
@@ -388,7 +435,7 @@ void readStatisticsFile() {
 		char str[60];
 		int line = 0;
 		while (fgets(str, 60, fp) != NULL) {
-			char* ptr = strtok(str,";");
+			char* ptr = strtok(str, ";");
 			int position = 0;
 			while (ptr != NULL) {
 				if (position == 0) {
@@ -396,7 +443,7 @@ void readStatisticsFile() {
 				}
 				if (position == 1) {
 					int score = atoi(ptr);
-					statistics[line].score =score;
+					statistics[line].score = score;
 				}
 				//printf("%s,", ptr);
 				ptr = strtok(NULL, ";");
@@ -408,53 +455,5 @@ void readStatisticsFile() {
 	}
 }
 
-void readStatistics() {
-	do {
-		char key = 'm';
-		drawStatistics(statistics);
-		
-		key = getch();
-		if (key == 'q') break;
-	} while (1);	
-}
-
-void writeFileStatistics() {
-	FILE* fp;
-	fp = fopen("statistics.txt", "w");
-	if (fp)
-	{
-		for (int i = 0; i < 10; i++) {
-			fprintf(fp, "%s;%i\n",statistics[i].nickname,statistics[i].score);
-		}
-		
-	}
-	fclose(fp);
-	
-}
-
-void writeToStatistics(statisticsRecord record) {
-	for (int i = 0; i < 10;i++ ) {
-		if (statistics[i].score < record.score) {
-			statisticsRecord help1{ "",statistics[i].score };
-			strcpy(help1.nickname, statistics[i].nickname);
-
-			statistics[i].score = record.score;
-			strcpy(statistics[i].nickname, record.nickname);
-			
-			for (int j = (i+1); j < 10; j++) {
-				statisticsRecord help2{ "",statistics[j].score};
-				strcpy(help2.nickname, statistics[j].nickname);
-
-				statistics[j].score = help1.score;
-				strcpy(statistics[j].nickname, help1.nickname);
-
-				help1.score = help2.score;
-				strcpy(help1.nickname, help2.nickname);
-			}
-			break;	
-		}
-		
-	}
-}
 
 

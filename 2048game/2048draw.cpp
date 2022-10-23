@@ -22,24 +22,30 @@ void numberColour(int number);
 
 void drawMenu() {
 	system("cls");
-	printf("**** Game 2048 ****\n\n");
-	printf("\n");
-	printf("1. -> Start new game\n");
-	printf("2. -> Continue in actual game\n");
-	printf("3. -> Statistics\n");
-	printf("4. -> End game\n");
+	printf("\n\n");
+	printf("|------------------**** Game 2048 ****------------------|\n");
+	printf("|\t\t\t\t\t\t\t|\n");
+	printf("|\t\t1. -> Start new game\t\t\t|\n");
+	printf("|\t\t2. -> Continue in actual game\t\t|\n");
+	printf("|\t\t3. -> Statistics\t\t\t|\n");
+	printf("|\t\t4. -> End game\t\t\t\t|\n");
+	printf("|\t\t\t\t\t\t\t|\n");
+	printf("|-------------------------------------------------------|\n");
 }
 
 void drawStatistics(statisticsRecord statistics[10]) {
 	system("cls");
-	printf("*** Game 2048 ***");
-	printf("\n\n\n");
-	printf("Position\tNickname\tScore\n");
-	for (int i = 0; i < 10; i++) {
-		printf("%i\t\t%s\t\t%i\n", i + 1, statistics[i].nickname, statistics[i].score);
-	}
 	printf("\n\n");
-	printf("(Q)Exit");
+	printf("|------------------**** Game 2048 ****------------------|\n");
+	printf("|\t\t\t\t\t\t\t|\n");
+	printf("|\tPosition\tNickname\tScore\t\t|\n");
+	for (int i = 0; i < 10; i++) {
+		printf("|\t%i\t\t%s\t\t%i\t\t|\n", i + 1, statistics[i].nickname, statistics[i].score);
+	}
+	printf("|\t\t\t\t\t\t\t|\n");
+	printf("|\t(Q)Exit\t\t\t\t\t\t|\n");
+	printf("|\t\t\t\t\t\t\t|\n");
+	printf("|-------------------------------------------------------|\n");
 }
 
 void drawEndScore(char nickname[10], int score) {
@@ -51,9 +57,10 @@ void drawEndScore(char nickname[10], int score) {
 
 
 
-void drawGameField(int gameFieldDraw[4][4], int score) {
+void drawGameField(int gameFieldDraw[4][4], int score, char nickname[10]) {
 	system("cls");
 	printf("**** Game 2048 ****\n\n");
+	printf("Player: %s\n\n", nickname);
 	printf("SCORE: %i\n", score);
 	printf("|-------|-------|-------|-------|\n");
 	for (int i = 0; i < 4; i++) {
