@@ -1,8 +1,13 @@
-﻿// 2048game.h: Soubor k zahrnutí pro standardní systémové soubory k zahrnutí
-// nebo soubory k zahrnutí specifické pro projekt.
+﻿#pragma once
 
-#pragma once
+int game(bool newGame);
 
-#include <iostream>
+void readStatistics();
+void readStatisticsFile();
+void writeFileStatistics();
+void writeToStatistics(statisticsRecord);
 
-// TODO: Zde odkažte na dodatečné hlavičky, které program vyžaduje.
+int generateRandomTwoOrFour();
+int getRandomZeroPosition();
+int playerMove(int);
+void delay(int milliseconds);

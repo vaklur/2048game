@@ -1,12 +1,9 @@
-﻿// 2048game.cpp
-//
-#define _CRT_SECURE_NO_DEPRECATE 
+﻿#define _CRT_SECURE_NO_DEPRECATE 
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "structures.h"
 #include "2048game.h"
 #include "2048draw.h"
-
 
 #include <errno.h>
 #include <stdio.h>
@@ -15,80 +12,20 @@
 #include <conio.h>
 #include <string.h>
 
+// Global variables
 statisticsRecord statistics[10];
 
-
-
-// Functions
-int menu();
-int game();
-int getNickName();
-
-void readStatistics();
-void readStatisticsFile();
-void writeFileStatistics();
-void writeToStatistics(statisticsRecord);
-
-int generateRandomTwoOrFour();
-int getRandomZeroPosition();
-int playerMove(int);
-
-
-// Global variables
 int gameField[4][4];
 int score;
 char nickname[10];
 bool gameEnd= true;
 
-
-void delay(int milliseconds);
-
-int main()
-{
-	
-	readStatisticsFile();
-	menu();
-	return 0;
-}
-
-int menu() {
-
-	do{
-		drawMenu();
-		
-		char key = getch();
-		// Start new game
-		if (key == '1') getNickName();
-		// Continue in actual game
-		if (key == '2') {
-			if(gameEnd==false) game();
-		}
-		// Statistics
-		if (key == '3') readStatistics();
-		// Quit game
-		if (key == '4')	break;
-		
-	} 
-	while (1);
-
-	
-	return 0;
-}
-
-int getNickName() {
-	system("cls");
-	printf("**** Game 2048 ****\n\n");
-	printf("\n\n\n");
-	printf("Enter you nickname (max 10 characters):");
-	scanf("%9s", nickname);
-	game();
-	return 0;
-}
-
-int game() {
+int game(bool newGame) {
 	int gameOver = 0;
 	// Initialize game field with zeros
-	if (gameEnd == true) {
+	if (gameEnd == true && newGame == false) return 0;
+	if (gameEnd == true || newGame == true) {
+		strcpy(nickname, getNickName());
 		score = 0;
 		
 		for (int i = 0; i < 4; i++) {
@@ -113,7 +50,7 @@ int game() {
 		// RIGHT
 		if (key == 'd' || key == 77) gameOver = playerMove(4);
 		// RESTART
-		if (key == 'r') game();
+		if (key == 'r') game(true);
 		// EXIT
 		if (key == 'q') {
 			gameEnd = false;
@@ -320,8 +257,6 @@ int playerMove(int move) {
 	}
 	return 0;
 }
-
-
 
 int getRandomZeroPosition() {
 	int zeroPosition = 0;

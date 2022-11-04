@@ -20,6 +20,16 @@
 
 void numberColour(int number);
 
+char* getNickName() {
+	char nickname[10];
+	system("cls");
+	printf("**** Game 2048 ****\n\n");
+	printf("\n\n\n");
+	printf("Enter you nickname (max 10 characters):");
+	scanf("%9s", nickname);
+	return nickname;
+}
+
 void drawMenu() {
 	system("cls");
 	printf("\n\n");
@@ -35,7 +45,7 @@ void drawMenu() {
 
 void drawStatistics(statisticsRecord statistics[10]) {
 	system("cls");
-	printf("\n\n");
+	printf("\n\n\n");
 	printf("|------------------**** Game 2048 ****------------------|\n");
 	printf("|\t\t\t\t\t\t\t|\n");
 	printf("|\tPosition\tNickname\tScore\t\t|\n");
