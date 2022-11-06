@@ -1,10 +1,6 @@
 ﻿#define _CRT_SECURE_NO_DEPRECATE 
 #define _CRT_SECURE_NO_WARNINGS
 
-#include "structures.h"
-#include "2048game.h"
-#include "2048draw.h"
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,22 +8,28 @@
 #include <conio.h>
 #include <string.h>
 
-// Global variables
-statisticsRecord statistics[10];
+#include "structures.h"
+#include "2048game.h"
+#include "2048draw.h"
+#include "2048statistics.h"
 
+// Global variables
 int gameField[4][4];
 int score;
 char nickname[10];
-bool gameEnd= true;
+bool restart = false;
 
-int game(bool newGame) {
-	int gameOver = 0;
-	// Initialize game field with zeros
-	if (gameEnd == true && newGame == false) return 0;
-	if (gameEnd == true || newGame == true) {
-		strcpy(nickname, getNickName());
+// Main function for game logic
+void game(bool newGame) {
+	// Control game over variable
+	bool gameOver = false;
+	// If is new game, redeclare the variables
+	if (newGame == true) {
+		// If the game was restarted, do not ask for a nickname
+		if (restart == false) strcpy(nickname, getNickName());
+
 		score = 0;
-		
+
 		for (int i = 0; i < 4; i++) {
 			for (int j = 0; j < 4; j++) {
 				gameField[i][j] = 0;
@@ -35,6 +37,11 @@ int game(bool newGame) {
 		}
 		gameField[0][0] = 2;
 	}
+	// If the game is played, load the save data 
+	else {
+		loadActualGame();
+	}
+	// Print game field
 	drawGameField(gameField,score,nickname);
 	do {
 		unsigned char key = 'm';
@@ -50,37 +57,44 @@ int game(bool newGame) {
 		// RIGHT
 		if (key == 'd' || key == 77) gameOver = playerMove(4);
 		// RESTART
-		if (key == 'r') game(true);
+		if (key == 'r') {
+			restart = true;
+			game(true);
+		}
 		// EXIT
 		if (key == 'q') {
-			gameEnd = false;
+			saveActualGame(true, nickname, gameField, score);
 			break;
 		}
 		// GAME OVER
-		if (gameOver == 1) {
+		if (gameOver == true) {
+			saveActualGame(false, nickname, gameField, score);
 			drawEndScore(nickname,score);
 			statisticsRecord record;
 			record.score = score;
 			strcpy(record.nickname, nickname);
 			writeToStatistics(record);
-			writeFileStatistics();
 			delay(5000);
 			break;
 			}
 	}
-	while (gameOver!=1);
-
-	return 0;
+	while (gameOver!=true);
 }
 
-int playerMove(int move) {
-	/*
+// Function for movement of numbers
+bool playerMove(int move) {
+	/* If variable move is:
 	1 - up
 	2 - down
 	3 - left
 	4 - right
 	*/
+	// Count of moves
 	int countMove = 0;
+	/*
+	MOVEMENT OF NUMBERS
+	*/
+	// up
 	if (move == 1) {
 		// MOVE NUMBERS
 		for (int j = 0; j < 4; j++) { // collums
@@ -121,6 +135,7 @@ int playerMove(int move) {
 			}
 		}
 	}
+	// down
 	else if (move == 2){
 		// MOVE NUMBERS
 		for (int j = 0; j < 4; j++) { // collums
@@ -135,7 +150,6 @@ int playerMove(int move) {
 				}
 			}
 		}
-		
 		// COUNT NUMBERS
 		for (int j = 0; j < 4; j++) { // collums
 			for (int i = 0; i < 4; i++) { // rows
@@ -147,7 +161,6 @@ int playerMove(int move) {
 				}
 			}
 		}
-
 		// MOVE NUMBERS
 		for (int j = 0; j < 4; j++) { // collums
 			for (int i = 0; i < 3; i++) { // rows
@@ -161,6 +174,7 @@ int playerMove(int move) {
 			}
 		}
 	}
+	// left
 	else if (move == 3) {
 		for (int j = 0; j < 4; j++) { // collums
 			for (int i = 3; i > 0; i--) { // rows
@@ -174,7 +188,6 @@ int playerMove(int move) {
 				}
 			}
 		}
-
 		// COUNT NUMBERS
 		for (int j = 0; j < 4; j++) { // collums
 			for (int i = 0; i < 3; i++) { // rows
@@ -186,7 +199,6 @@ int playerMove(int move) {
 				}
 			}
 		}
-
 		// MOVE NUMBERS
 		for (int j = 0; j < 4; j++) { // collums
 			for (int i = 3; i > 0; i--) { // rows
@@ -200,6 +212,7 @@ int playerMove(int move) {
 			}
 		}
 	}
+	// right
 	else if (move == 4) {
 	// MOVE NUMBERS
 	for (int j = 0; j < 4; j++) { // collums
@@ -244,37 +257,42 @@ int playerMove(int move) {
 		// Do nothing
 	}
 
-	//GENERATE NUMBERS ON ZEROS
+	//GENERATE NUMBERS RANDOM ON ZEROS
 	int zeroPosition = getRandomZeroPosition();
+
+	// No free position for generate new number
 	if (zeroPosition == -1) {
-		return 1;
+		return true;
 	}
+	// If the number moves, give a new number to zero position
 	if(countMove>0){			
 		int row = zeroPosition / 4;
 		int collum = zeroPosition % 4;
 		gameField[row][collum] = generateRandomTwoOrFour();
 		drawGameField(gameField,score,nickname);
 	}
-	return 0;
+	return false;
 }
 
+// Get random position on zero in game field ( return -1 if no position in game field)
 int getRandomZeroPosition() {
 	int zeroPosition = 0;
 	int zeroField = 0;
 
+	// Control if the zero field exists and if not return -1
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
 			if (gameField[i][j] == 0) zeroField++;
 		}
 	}
-	//printf("Zero Field: %i\n", zeroField);
 	if (zeroField == 0) return -1;
 
+	// Generate random zero position
 	srand((unsigned)time(NULL));
 	int random = 0;
 	random = (rand() % zeroField);
 
-	//printf("Random: %i\n", random);
+	// Get a real zero position
 	zeroField = 0;
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
@@ -284,10 +302,10 @@ int getRandomZeroPosition() {
 			}
 		}
 	}
-	//printf("zeroPosition: %i\n", zeroPosition);
 	return zeroPosition;
 }
 
+// Generate random number 2 or 4 (Chance 50/50)
 int generateRandomTwoOrFour() {
 	int number = 0;
 	int randomNumber = 0;
@@ -302,6 +320,7 @@ int generateRandomTwoOrFour() {
 	return number;
 }
 
+// Function for delay in msc
 void delay(int milliseconds)
 {
 	long pause;
@@ -313,58 +332,32 @@ void delay(int milliseconds)
 		now = clock();
 }
 
-void readStatistics() {
-	do {
-		char key = 'm';
-		drawStatistics(statistics);
-
-		key = getch();
-		if (key == 'q') break;
-	} while (1);
-}
-
-void writeFileStatistics() {
+// Save actual game to text file
+void saveActualGame(bool exist, char nickname[10], int gameField[4][4], int score) {
 	FILE* fp;
-	fp = fopen("statistics.txt", "w");
+	fp = fopen("actualGame.txt", "w");
 	if (fp)
 	{
-		for (int i = 0; i < 10; i++) {
-			fprintf(fp, "%s;%i\n", statistics[i].nickname, statistics[i].score);
+		if (exist == true) {
+			fprintf(fp, "1\n");
 		}
-
-	}
-	fclose(fp);
-
-}
-
-void writeToStatistics(statisticsRecord record) {
-	for (int i = 0; i < 10; i++) {
-		if (statistics[i].score < record.score) {
-			statisticsRecord help1{ "",statistics[i].score };
-			strcpy(help1.nickname, statistics[i].nickname);
-
-			statistics[i].score = record.score;
-			strcpy(statistics[i].nickname, record.nickname);
-
-			for (int j = (i + 1); j < 10; j++) {
-				statisticsRecord help2{ "",statistics[j].score };
-				strcpy(help2.nickname, statistics[j].nickname);
-
-				statistics[j].score = help1.score;
-				strcpy(statistics[j].nickname, help1.nickname);
-
-				help1.score = help2.score;
-				strcpy(help1.nickname, help2.nickname);
-			}
-			break;
+		else {
+			fprintf(fp, "0\n");
 		}
-
+		nickname[strcspn(nickname, "\n")] = 0;
+		fprintf(fp, "%s\n",nickname);
+		fprintf(fp, "%i",score);
+		for (int i = 0; i < 4; i++) {
+			fprintf(fp, "\n%i;%i;%i;%i",gameField[i][0], gameField[i][1], gameField[i][2], gameField[i][3]);
+		}
+		fclose(fp);
 	}
 }
 
-void readStatisticsFile() {
+// Load actual game from text file
+void loadActualGame() {
 	FILE* fp;
-	fp = fopen("statistics.txt", "r");
+	fp = fopen("actualGame.txt", "r");
 	if (fp)
 	{
 		char str[60];
@@ -373,14 +366,28 @@ void readStatisticsFile() {
 			char* ptr = strtok(str, ";");
 			int position = 0;
 			while (ptr != NULL) {
-				if (position == 0) {
-					strcpy(statistics[line].nickname, ptr);
+				if (line == 0);
+				else if (line == 1) {
+					strcpy(nickname, ptr);
 				}
-				if (position == 1) {
-					int score = atoi(ptr);
-					statistics[line].score = score;
+				else if (line == 2) {
+					score = atoi(ptr);
 				}
-				//printf("%s,", ptr);
+				else {
+					if (position == 0) {
+						gameField[line - 3][0] = atoi(ptr);
+					}
+					if (position == 1) {
+						gameField[line - 3][1] = atoi(ptr);
+					}
+					if (position == 2) {
+						gameField[line - 3][2] = atoi(ptr);
+					}
+					if (position == 3) {
+						gameField[line - 3][3] = atoi(ptr);
+					}
+				}
+				
 				ptr = strtok(NULL, ";");
 				position++;
 			}
@@ -390,5 +397,18 @@ void readStatisticsFile() {
 	}
 }
 
+// Control if played game exist in text file
+bool actualGameExist() {
+	FILE* fp;
+	char exists{};
+	fp = fopen("actualGame.txt", "r");
+	if (fp)
+	{
+		exists = fgetc(fp);		
+		fclose(fp);
+	}
+	if (exists == '0') return false;
+	else return true;
+}
 
 

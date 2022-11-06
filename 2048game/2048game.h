@@ -1,13 +1,12 @@
 ﻿#pragma once
 
-int game(bool newGame);
-
-void readStatistics();
-void readStatisticsFile();
-void writeFileStatistics();
-void writeToStatistics(statisticsRecord);
-
+void game(bool newGame);
 int generateRandomTwoOrFour();
 int getRandomZeroPosition();
-int playerMove(int);
+bool playerMove(int move);
+
+void saveActualGame(bool exist, char nickname[10], int gameField[4][4], int score);
+void loadActualGame();
+bool actualGameExist();
+
 void delay(int milliseconds);
